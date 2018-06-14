@@ -1,18 +1,12 @@
 import csv
 import nltk
-import codecs
-import glob
 import pickle
-import re
-import pprint
-from nltk.stem.porter import PorterStemmer
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 import gensim, logging
 from scipy.spatial.distance import cosine
 from gensim import corpora, models
-from gensim.models import Word2Vec
-from gensim.corpora import Dictionary
+
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
@@ -28,11 +22,9 @@ def main():
     z = array_splitter(y)
     m = lda(z)
     t = topic_sorter(m)
-    # u = tester()
     u = word2vec(y, t, d)
-    #printer(u)
+    # printer(u)
     return u
-
 
 
 def cleanup(file):
@@ -65,7 +57,6 @@ def word2vec(file, topic, key):
 
     for w in key:
         topic.append(w)
-        print(w)
 
     fd = open('word_vectors.pkl', 'rb')
     word_vectors = pickle.load(fd)
@@ -73,25 +64,21 @@ def word2vec(file, topic, key):
     while n < len(topic):
         i = 0
         for words in file:
-            if words not in repeats:
+            if words not in repeats and words in word_vectors:
                 repeats.append(words)
                 if n == 0:
                     total_similarities.append(1 - cosine(word_vectors[words], word_vectors[topic[n]]))
-                    # total_similarities.append(model.similarity(words, topic[n]))
                 else:
                     total_similarities[i] += cosine(1 - word_vectors[words], word_vectors[topic[n]])
-                    # total_similarities[i] += model.similarity(words, topic[n])
                 i += 1
         n += 1
     for s in total_similarities:
         s /= len(topic)
-    #print(total_similarities)
-
 
     repeats = list()
     i = 0
     for words in file:
-        if words not in repeats:
+        if words not in repeats and words in word_vectors:
             repeats.append(words)
             if total_similarities[i] > 0.3 or words in key:
                 x.append(words)
@@ -191,5 +178,5 @@ def printer(file):
     for words in file:
         print(words)
 
+# main()
 
-#main()
