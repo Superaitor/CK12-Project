@@ -1,17 +1,12 @@
-from word_2_vec import main
 from word_2_vec import cleanup
 import pickle
-import codecs
-import glob
 from scipy.spatial.distance import cosine
-import gensim
 from nltk.corpus import stopwords
-
-from nltk import word_tokenize
+from nltk.stem.snowball import SnowballStemmer
 
 
 def main3(word):
-    #main()
+    # main()
     k = word
     fd = open('word_similarities.pkl', 'rb')
     things = pickle.load(fd)
@@ -40,24 +35,30 @@ def noun_finder(file):
 
 
 def nearest_neighbors(k, files):
+    stemmer = SnowballStemmer("english")
     fd = open('word_vectors.pkl', 'rb')
     word_vectors = pickle.load(fd)
     total_similarities = {}
     numbers = []
     neighbors = []
     for words in files:
-        try:
-            total_similarities.update({(1 - cosine(word_vectors[words], word_vectors[k])): words})
-            numbers.append(1 - cosine(word_vectors[words], word_vectors[k]))
-        except KeyError:
-            pass
+        if words in word_vectors:
+            try:
+                total_similarities.update({(1 - cosine(word_vectors[words], word_vectors[k])): words})
+                numbers.append(1 - cosine(word_vectors[words], word_vectors[k]))
+            except KeyError:
+                pass
+
     numbers.sort(reverse=True)
     n = 0
-
     while n < 4:
         try:
-            neighbors.append(total_similarities[numbers[n + 10]])
-            n += 1
+            if stemmer.stem(total_similarities[numbers[n + 10]]) == stemmer.stem(k):
+                neighbors.append(total_similarities[numbers[n + 20]])
+                n += 1
+            else:
+                neighbors.append(total_similarities[numbers[n + 10]])
+                n += 1
         except KeyError:
             pass
     return neighbors
